@@ -1,0 +1,325 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'maven3'
+        jdk 'jdk21'
+    }
+
+    registrycredential = 'ecr:us-west-1:awscreds'
+        registry = 'https://957656047642.dkr.ecr.us-west-1.amazonaws.com'
+        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/'
+
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+        NEXUS_VERSION = 'nexus3'
+        NEXUS_PROTOCOL = 'http'
+        NEXUS_URL = 'Nexus_IP:8081'
+        NEXUS_REPOSITORY = 'devops-repo'
+        NEXUS_REPO_ID = 'devops-repo'
+        NEXUS_CREDENTIALS_ID = 'nexus-cred'
+        ARTVERSION = "${env.BUILD_ID}"
+
+        registrycredential = 'ecr-ap-south-1:awscrdes'
+        registry = 'https://931680509142.dkr.ecr.ap-south-1.amazonaws.com/'
+        IMAGE_NAME = '931680509142.dkr.ecr.ap-south-1.amazonaws.com/'
+    }
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('git Checkout') {
+            steps {
+                git branch: 'main',url: ''
+            }
+        }
+        stage('Maven Build') {
+            steps {
+                sh 'mvn clean install -DskipTests'
+            }
+            post {
+                success {
+                    echo 'Maven Build Successful'
+                    archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+                }
+            }
+        }
+        stage('unit test') {
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                success {
+                    echo 'Unit Tests Passed'
+                }
+                failure {
+                    echo 'Unit Tests Failed'
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('integration test') {
+            steps {
+                sh 'mvn verify -DskipUnitTests'
+            }
+            post {
+                success {
+                    echo 'Integration Tests Passed'
+                }
+                failure {
+                    echo 'Integration Tests Failed'
+                    junit '**/target/failsafe-reports/*.xml'
+                }
+            }
+        }
+        stage('sonarQube analysis with checkstyle') {
+            steps {
+                sh 'mvn checkstyle:checkstyle'
+            }
+            post {
+                success {
+                    echo 'Checkstyle analysis completed successfully'
+                    publishHTML(target: [
+                        reportName: 'Checkstyle Report',
+                        reportDir: 'target/site',
+                        reportFiles: 'checkstyle.html',
+                        keepAll: true,
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        includeInEmail: true
+                    ])
+                }
+            }
+        }
+        stage('codeanalysis with sonarqube') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh '''${SCANNER_HOME}/bin/sonar-scanner \
+                        -Dsonar.projectKey=devops-project \
+                        -Dsonar.sources=. \
+                        -Dsonar.java.binaries=target/classes \
+                        -Dsonar.junit.reportPaths=target/surefire-reports \
+                        -Dsonar.jacoco.reportPaths=target/jacoco.exec \
+                        -Dsonar.java.checkstyle.reportPaths=target/site/checkstyle.xml \
+                    '''    
+                }
+            }
+        }
+        stage('quality gate') {
+            steps {
+              script {
+                timeout(time: 1, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true, credentialsId: 'sonar-cred'
+                }
+              }
+            }
+        }
+        stage('publish to nexus repository') {
+            steps {
+             script{
+                pom = readMavenPom file: 'pom.xml'
+                filesByGlob = FindFiles(glob: '**/target/*.jar')
+                echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+                artifactPath = filesByGlob[0].path
+                artifactExists = fileExists artifactPath
+                if (artifactExists) {
+                    echo "Artifact found at: ${artifactPath}"
+                    nexusArtifactUploader(
+                        nexusVersion: NEXUS_VERSION,
+                        protocol: NEXUS_PROTOCOL,
+                        nexusUrl: NEXUS_URL,
+                        groupId: pom.groupId,
+                        version: ARTVERSION,
+                        repository: NEXUS_REPOSITORY,
+                        credentialsId: NEXUS_CREDENTIALS_ID,
+                        artifactId: pom.artifactId,
+                        artifacts: [
+                            [artifactId: pom.artifactId, 
+                            classifier: '',
+                            file: artifactPath, 
+                            type: 'pom.packaging'],
+                            classifier: '',
+                            file: 'pom.xml',
+                            type: 'pom'
+                        ]
+                    )
+                } 
+                else {
+                    error "Artifact not found at path: ${artifactPath}"
+                }
+             }   
+            }
+        }
+        stage('OWASP Dependency Check') {
+            steps {
+                sh 'mvn org.owasp:dependency-check-maven:check'
+            }
+            post {
+                success {
+                    echo 'OWASP Dependency Check completed successfully'
+                    publishHTML(target: [
+                        reportName: 'OWASP Dependency Check Report',
+                        reportDir: 'target/dependency-check-report',
+                        reportFiles: 'dependency-check-report.html',
+                        keepAll: true,
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        includeInEmail: true
+                    ])
+                }
+            }
+        }
+        stage('trivy file scan') {
+            steps {
+                sh 'trivy fs --format template --template "@contrib/html.tpl" -o trivy-file-scan-report.html .'
+            }
+            post {
+                success {
+                    echo 'Trivy File Scan completed successfully'
+                    publishHTML(target: [
+                        reportName: 'Trivy File Scan Report',
+                        reportDir: '.',
+                        reportFiles: 'trivy-file-scan-report.html',
+                        keepAll: true,
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        includeInEmail: true
+                    ])
+                }
+            }
+        }
+        stage('build docker image') {
+            steps {
+                script {
+                    //sh "aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 957656047642.dkr.ecr.us-west-1.amazonaws.com"
+                    env.IMAGE_TAG = "${IMAGE_NAME}${BUILD_NUMBER}"
+                    sh "docker rmi -f ${IMAGE_NAME}:latest ${env.IMAGE_TAG} || true"
+                    
+                    dockerImage = docker.build("${IMAGE_NAME}:latest", '.')
+                    sh "docker tag ${IMAGE_NAME}:latest ${env.IMAGE_TAG}"
+                    
+                }
+            }
+        }
+        stage('trivy scan image') {
+            steps {
+                sh "trivy image --format template --template '@contrib/html.tpl' -o trivy-image-scan-report.html ${IMAGE_NAME}:latest"
+            }
+            post {
+                success {
+                    echo 'Trivy Image Scan completed successfully'
+                    publishHTML(target: [
+                        reportName: 'Trivy Image Scan Report',
+                        reportDir: '.',
+                        reportFiles: 'trivy-image-scan-report.html',
+                        keepAll: true,
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        includeInEmail: true
+                    ])
+                }
+            }
+        }
+         stage('trivy scan image') {
+            steps {
+                sh """
+                echo 'Running trivy scan on Docker image : ${env.IMAGE_TAG}'
+                trivy image -f html -o trivy-image-scan-report.html ${env.IMAGE_TAG}
+                trivy image -f table -o trivy-image-scan-report.txt ${env.IMAGE_TAG}
+                """
+                // trivy image --format template --template '@contrib/html.tpl' -o trivy-image-scan-report.html ${IMAGE_NAME}:latest"
+            }
+            post {
+                success {
+                    echo 'Trivy Image Scan completed successfully'
+                    publishHTML(target: [
+                        reportName: 'Trivy Image Scan Report',
+                        reportDir: '.',
+                        reportFiles: 'trivy-image-scan-report.html',
+                        keepAll: true,
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        includeInEmail: true
+                    ])
+                }
+            }
+        }
+        stage('Upload application image to ECR') {
+            steps {
+                script {
+                    docker.withRegistry(registry, registrycredential) {
+                        dockerImage.push("${BUILD_NUMBER}")
+                        sh "docker push ${env.IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+        stage('deploy to container') {
+            steps {
+                sh 'echo Deploying application to container...'
+                script {
+                    sh "docker rm -f devops-repo || true"
+                    sh "docker run -d --name devops-repo -p 8080:8080 ${IMAGE_NAME}:latest"
+                // Add your deployment commands here, e.g., using kubectl or docker run
+                }
+            }
+        }
+        stage('DAST Scan with OWASP ZAP') {
+            steps {
+                echo 'Running DAST scan on deployed application...'
+                def exitCode = sh(script: '''
+                    docker run --rm --user root --network host -v $(pwd):/zap/wrk:rw \
+                    -t http://localhost:8080 \
+                    -r zap_report.html' -J zap_report.json
+                ''', returnStatus: true)
+
+                echo 'ZAP scan completed with exit code: ${exitCode}'
+                if (exitCode != 0) {
+                    error "ZAP scan failed with exit code: ${exitCode}" 
+
+                 publishHTML(target: [
+                    reportName: 'OWASP ZAP DAST Report',
+                    reportDir: '.',
+                    reportFiles: 'zap_report.html',
+                    keepAll: true,
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    includeInEmail: true
+                ])
+                 publishHTML(target: [
+                    reportName: 'OWASP ZAP DAST JSON Report',
+                    reportDir: '.',
+                    reportFiles: 'zap_report.json',
+                    keepAll: true,
+                    allowMissing: false,
+                    alwaysLinkToLastBuild: true,
+                    includeInEmail: true
+                ])
+                // Add DAST scanning steps here (e.g., using OWASP ZAP, etc.)
+            }
+            else{
+                echo 'ZAP scan completed successfully with no vulnerabilities found.'
+            }
+            }
+        }
+        post {
+            always {
+                echo 'archiving zap scan reports.'
+                archiveArtifacts artifacts: 'zap_report.html', fingerprint: true
+            }
+        }        
+    }
+}
+ post {
+    always {
+        script {
+            def buildStatus = currentBuild.currentResult
+            def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'Github User'
+            def buildUrl = env.BUILD_URL
+
+            // slack notification
+        }
+    }
+ }
