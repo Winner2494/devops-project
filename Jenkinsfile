@@ -7,8 +7,8 @@ pipeline {
     }
 
     registrycredential = 'ecr:us-west-1:awscreds'
-        registry = 'https://957656047642.dkr.ecr.us-west-1.amazonaws.com'
-        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/'
+    registry = 'https://957656047642.dkr.ecr.us-west-1.amazonaws.com'
+    IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/'
 
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
@@ -222,7 +222,7 @@ pipeline {
                 }
             }
         }
-         stage('trivy scan image') {
+        stage('trivy scan image') {
             steps {
                 sh """
                 echo 'Running trivy scan on Docker image : ${env.IMAGE_TAG}'
@@ -320,6 +320,30 @@ pipeline {
             def buildUrl = env.BUILD_URL
 
             // slack notification
+            slackSend (
+                channel: '#devops-cicd',
+                color: buildStatus == 'SUCCESS' ? 'good' : 'danger', 
+                message: """*${buildStatus}:* Job *${env.JOB_NAME}* Builds #${env.BUILD_NUMBER} 
+                *started by:* ${buildUser}
+                *Build URL:* ${buildUrl}
+                """
+            )
         }
-    }
+        emailext (
+            subject: "Build pipeline ${buildStatus}: Job ${env.JOB_NAME} Build #${env.BUILD_NUMBER}",
+            body: """
+                     <p>Maven and devops ci-cd pipeline build completed with status:</p>
+                     <p>Build Status: <b>${currentBuild.currentResult}<b></p>
+                     <p>Project: <b>${env.JOB_NAME}<b></p>
+                     <p>Job Name: ${env.JOB_NAME}</p>
+                     <p>Build Number: ${env.BUILD_NUMBER}</p>
+                     <p>started by: <b>${buildUser}<b></p>
+                     <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                  """,
+                  to: 'ajinkyahatolkar24@gmail.com',
+                  from: 'ajinkyahatolkar24@gmail.com',
+                  mimeType: 'text/html',
+                  attachmentsPattern: 'zap_report.html,trivy-file-scan-report.html,trivy-image-scan-report.html,checkstyle.html,dependency-check-report.html'
+                  )         
+     }
  }
