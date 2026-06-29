@@ -1,10 +1,9 @@
-From tomcat:10.0-jdk21
-
-Workdir /usr/local/tomcat
-
-RUN rm -rf /usr/local/tomcat/webapps/*
-COPY target/*.war /usr/local/tomcat/webapps/ROOT.war
-
-EXPOSE 8080
-CMD ["catalina.sh", "run"]
-Volume /usr/local/tomcat/webapps
+FROM mcr.microsoft.com/openjdk/jdk:21-ubuntu
+VOLUME /tmp
+ARG JAVA_OPTS
+ENV JAVA_OPTS=$JAVA_OPTS
+COPY target/weather-monitoring-system-0.0.1-SNAPSHOT.jar springbootweathermonitoringapp.jar
+#EXPOSE 3000
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar springbootweathermonitoringapp.jar"]
+# For Spring-Boot project, use the entrypoint below to reduce Tomcat startup time.
+#ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar springbootweathermonitoringapp.jar"]
