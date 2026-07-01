@@ -14,7 +14,7 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
         NEXUS_VERSION = 'nexus3'
         NEXUS_PROTOCOL = 'http'
-        NEXUS_URL = '54.67.139.121:8081'
+        NEXUS_URL = '18.144.208.59:8081'
         NEXUS_REPOSITORY = 'devops-repo'
         NEXUS_REPO_ID = 'devops-repo'
         NEXUS_CREDENTIALS_ID = 'nexus-cred'
