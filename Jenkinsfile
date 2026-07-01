@@ -1,4 +1,4 @@
-pipeline {
+pipeline {                                                                                                                    
     agent any
 
     tools {
@@ -6,24 +6,21 @@ pipeline {
         jdk 'jdk21'
     }
 
-    registrycredential = 'ecr:us-west-1:awscreds'
-        registry = 'https://957656047642.dkr.ecr.us-west-1.amazonaws.com'
-        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/'
-
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
         NEXUS_VERSION = 'nexus3'
         NEXUS_PROTOCOL = 'http'
-        NEXUS_URL = '18.144.208.59:8081'
+        NEXUS_URL = '18.144.208.59:8081' // Update with your actual Nexus IP
         NEXUS_REPOSITORY = 'devops-repo'
         NEXUS_REPO_ID = 'devops-repo'
         NEXUS_CREDENTIALS_ID = 'nexus-cred'
         ARTVERSION = "${env.BUILD_ID}"
 
-        registrycredential = 'ecr-ap-south-1:awscrdes'
-        registry = 'https://931680509142.dkr.ecr.ap-south-1.amazonaws.com/'
-        IMAGE_NAME = '931680509142.dkr.ecr.ap-south-1.amazonaws.com/'
+        registrycredential = 'ecr:us-west-1:awscreds'
+        registry = 'https://957656047642.dkr.ecr.us-west-1.amazonaws.com'
+        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/'
     }
+    
     stages {
         stage('Clean Workspace') {
             steps {
@@ -38,7 +35,28 @@ pipeline {
         }
         stage('Maven Build') {
             steps {
-                sh 'mvn clean install -DskipTests'
+                script {
+                    // 1. Force Jenkins to resolve the dynamic installation directory path for jdk21 and maven3
+                    def javaHomeDir = tool name: 'jdk21', type: 'jdk'
+                    def mavenHomeDir = tool name: 'maven3', type: 'hudson.tasks.Maven$MavenInstallation'
+                    
+                    // 2. Wrap the execution context with these strict paths overriding everything else
+                    withEnv([
+                        "JAVA_HOME=${javaHomeDir}",
+                        "M2_HOME=${mavenHomeDir}",
+                        "PATH=${javaHomeDir}/bin:${mavenHomeDir}/bin:${env.PATH}"
+                    ]) {
+                        // 3. Print out a debug log to your console to guarantee Java 21 is active
+                        echo "--- VERIFYING PIPELINE EXECUTION ENGINES ---"
+                        sh 'java -version'
+                        sh 'javac -version'
+                        sh 'mvn -version'
+                        echo "--------------------------------------------"
+                        
+                        // 4. Run the build cleanly with your explicit paths
+                        sh 'mvn clean install -DskipTests'
+                    }
+                }
             }
             post {
                 success {
@@ -63,7 +81,7 @@ pipeline {
         }
         stage('integration test') {
             steps {
-                sh 'mvn verify -DskipUnitTests'
+                sh 'mvn verify'
             }
             post {
                 success {
@@ -196,7 +214,7 @@ pipeline {
                 }
             }
         }
-        stage('trivy scan image') {
+        stage('trivy scan image') { 
             steps {
                 sh """
                 echo 'Running trivy scan on Docker image : ${env.IMAGE_TAG}'
@@ -310,9 +328,8 @@ pipeline {
                     from: 'devops24021994@gmail.com',
                     mimeType: 'text/html',
                     attachmentsPattern: 'zap_report.html,trivy-file-scan-report.html,trivy-image-scan-report.html,target/site/checkstyle.html,target/dependency-check-report/dependency-check-report.html'
-                )
-            }    
+                )        
+            }
         }
-    }
- }
-    
+    } 
+}
