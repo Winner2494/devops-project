@@ -23,7 +23,7 @@
 	<developers>
 		<developer>
 			<id>ajinkya_hatolkar</id>
-			<name>Ajinkya hatolkar</name>
+			<name>Ajinkya Hatolkar</name>
 			<email>devops24021994@gmail.com</email>
 		</developer>
 	</developers>
@@ -100,7 +100,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.9.16</version> <!-- Update to the latest version if needed -->
+				<version>3.13.0</version> <!-- Update to the latest version if needed -->
 				<configuration>
 					<source>21</source>
 					<target>21</target>
