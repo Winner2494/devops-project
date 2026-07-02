@@ -10,7 +10,7 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
         NEXUS_VERSION = 'nexus3'
         NEXUS_PROTOCOL = 'http'
-        NEXUS_URL = '18.144.208.59:8081' // Update with your actual Nexus IP
+        NEXUS_URL = '18.145.209.14:8081' // Update with your actual Nexus IP
         NEXUS_REPOSITORY = 'devops-repo'
         NEXUS_REPO_ID = 'devops-repo'
         NEXUS_CREDENTIALS_ID = 'nexus-cred'
@@ -35,28 +35,7 @@ pipeline {
         }
         stage('Maven Build') {
             steps {
-                script {
-                    // 1. Force Jenkins to resolve the dynamic installation directory path for jdk21 and maven3
-                    def javaHomeDir = tool name: 'jdk21', type: 'jdk'
-                    def mavenHomeDir = tool name: 'maven3', type: 'hudson.tasks.Maven$MavenInstallation'
-                    
-                    // 2. Wrap the execution context with these strict paths overriding everything else
-                    withEnv([
-                        "JAVA_HOME=${javaHomeDir}",
-                        "M2_HOME=${mavenHomeDir}",
-                        "PATH=${javaHomeDir}/bin:${mavenHomeDir}/bin:${env.PATH}"
-                    ]) {
-                        // 3. Print out a debug log to your console to guarantee Java 21 is active
-                        echo "--- VERIFYING PIPELINE EXECUTION ENGINES ---"
-                        sh 'java -version'
-                        sh 'javac -version'
-                        sh 'mvn -version'
-                        echo "--------------------------------------------"
-                        
-                        // 4. Run the build cleanly with your explicit paths
-                        sh 'mvn clean install -DskipTests'
-                    }
-                }
+                sh 'mvn clean package -DskipTests'
             }
             post {
                 success {
@@ -129,7 +108,7 @@ pipeline {
         stage('quality gate'){
             steps {
               script {
-                timeout(time: 1, unit: 'MINUTES') {
+                timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true, credentialsId: 'sonar-cred'
                 }
               }
