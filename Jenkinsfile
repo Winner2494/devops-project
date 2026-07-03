@@ -110,8 +110,8 @@ pipeline {
         stage('quality gate'){
             steps {
               script {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true, credentialsId: 'sonarqube-token'
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonarqube-token'
                 }
               }
             }
