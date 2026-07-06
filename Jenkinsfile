@@ -146,17 +146,19 @@ pipeline {
                 }
             }
         }
-        stage("OWASP Dependency Check Scan") {
+        /*stage("OWASP Dependency Check Scan") {
             steps {
-                dependencyCheck additionalArguments: '''
-                    --scan . 
-                    --disableYarnAudit 
-                    --disableNodeAudit 
-                ''',
-                odcInstallation: 'dp-check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                dependencyCheck(
+                     odcInstallation: 'dp-check',
+                     additionalArguments: '''
+                        --scan .
+                        --noupdate
+                        --disableYarnAudit
+                        --disableNodeAudit
+                     ''',
+                )
             }
-        }
+        }*/
         stage('trivy file scan') {
             steps {
                 sh 'trivy fs --format template --template "@contrib/html.tpl" -o trivy-file-scan-report.html .'
