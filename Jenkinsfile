@@ -18,7 +18,7 @@ pipeline {
 
         registrycredential = 'ecr:us-west-1:awscreds'
         registry = 'https://957656047642.dkr.ecr.us-west-1.amazonaws.com'
-        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/weather-app:${env.BUILD_NUMBER}'
+        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/weather-app'
     }
     
     stages {
@@ -181,11 +181,15 @@ pipeline {
         stage('build docker image') {
             steps {
                 script {
-                    env.IMAGE_TAG = "${IMAGE_NAME}:${BUILD_NUMBER}"
+                    /*env.IMAGE_TAG = "${IMAGE_NAME}:${BUILD_NUMBER}"
                     sh "docker rmi -f ${IMAGE_NAME}:latest ${env.IMAGE_TAG} || true "
                     
                     dockerImage = docker.build("${IMAGE_NAME}:latest", '.')
-                    sh "docker tag ${IMAGE_NAME}:latest ${env.IMAGE_TAG}"
+                    sh "docker tag ${IMAGE_NAME}:latest ${env.IMAGE_TAG}"*/
+                    def IMAGE_TAG = env.BUILD_NUMBER
+                    def FULL_IMAGE = "${env.IMAGE_NAME}:${IMAGE_TAG}"
+
+                    sh "docker build -t ${FULL_IMAGE} ."
                 }
             }
         }
