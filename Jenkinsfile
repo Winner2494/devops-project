@@ -18,7 +18,7 @@ pipeline {
 
         registrycredential = 'ecr:us-west-1:awscreds'
         registry = 'https://957656047642.dkr.ecr.us-west-1.amazonaws.com'
-        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/'
+        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/weather-app:${env.BUILD_NUMBER}'
     }
     
     stages {
