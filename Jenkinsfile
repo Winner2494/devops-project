@@ -192,11 +192,11 @@ pipeline {
                     sh "docker build -t ${FULL_IMAGE} ."
                 }
             }
-        }
+        
         stage('trivy scan image') { 
             steps {
                 sh """
-                echo 'Running trivy scan on Docker image : ${env.IMAGE_TAG}'
+                echo 'Running trivy scan on Docker image : ${env.FULL_IMAGE}'
                 trivy image -f html -o trivy-image-scan-report.html ${env.IMAGE_TAG}
                 trivy image -f table -o trivy-image-scan-report.txt ${env.IMAGE_TAG}
                 """
@@ -215,6 +215,7 @@ pipeline {
                     ])
                 }
             }
+        }
         }
         stage('Upload application image to ECR') {
             steps {
