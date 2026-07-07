@@ -10,7 +10,7 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
         NEXUS_VERSION = 'nexus3'
         NEXUS_PROTOCOL = 'http'
-        NEXUS_URL = '54.215.70.206:8081' // Update with your actual Nexus IP
+        NEXUS_URL = '13.56.250.116:8081' // Update with your actual Nexus IP
         NEXUS_REPOSITORY = 'devops-repo'
         NEXUS_REPO_ID = 'devops-repo'
         NEXUS_CREDENTIALS_ID = 'nexus-cred'
@@ -18,7 +18,7 @@ pipeline {
 
         registrycredential = 'ecr:us-west-1:awscreds'
         registry = 'https://957656047642.dkr.ecr.us-west-1.amazonaws.com'
-        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/weather-app'
+        IMAGE_NAME = '957656047642.dkr.ecr.us-west-1.amazonaws.com/wather-app'
     }
     
     stages {
