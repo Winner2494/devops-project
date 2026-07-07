@@ -220,8 +220,8 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry(registry, registrycredential) {
-                        dockerImage.push("${BUILD_NUMBER}")
-                        sh "docker push ${env.FULL_IMAGE}"
+                        dockerImage.push("${env.FULL_IMAGE}")
+                        /*sh "docker push ${env.FULL_IMAGE}"*/
                     }
                 }
             }
