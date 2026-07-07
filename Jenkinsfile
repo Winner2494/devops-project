@@ -186,19 +186,19 @@ pipeline {
                     
                     dockerImage = docker.build("${IMAGE_NAME}:latest", '.')
                     sh "docker tag ${IMAGE_NAME}:latest ${env.IMAGE_TAG}"*/
-                    def IMAGE_TAG = env.BUILD_NUMBER
-                    def FULL_IMAGE = "${env.IMAGE_NAME}:${IMAGE_TAG}"
+                    /*def IMAGE_TAG = env.BUILD_NUMBER*/
+                    env.FULL_IMAGE = "${env.IMAGE_NAME}:${BUILD_NUMBER}"
 
                     sh "docker build -t ${FULL_IMAGE} ."
                 }
             }
-        
+        }
         stage('trivy scan image') { 
             steps {
                 sh """
                 echo 'Running trivy scan on Docker image : ${env.FULL_IMAGE}'
-                trivy image -f html -o trivy-image-scan-report.html ${env.IMAGE_TAG}
-                trivy image -f table -o trivy-image-scan-report.txt ${env.IMAGE_TAG}
+                trivy image -f html -o trivy-image-scan-report.html ${env.FULL_IMAGE}
+                trivy image -f table -o trivy-image-scan-report.txt ${env.FULL_IMAGE}
                 """
             }
             post {
@@ -221,7 +221,7 @@ pipeline {
                 script {
                     docker.withRegistry(registry, registrycredential) {
                         dockerImage.push("${BUILD_NUMBER}")
-                        sh "docker push ${env.IMAGE_TAG}"
+                        sh "docker push ${env.FULL_IMAGE}"
                     }
                 }
             }
