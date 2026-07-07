@@ -216,7 +216,6 @@ pipeline {
                 }
             }
         }
-        }
         stage('Upload application image to ECR') {
             steps {
                 script {
