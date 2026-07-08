@@ -197,7 +197,7 @@ pipeline {
         stage('Trivy Image Scan') {
                 steps {
                     sh '''
-                    mkdir -p /var/.trivy-cache
+                    sudo mkdir -p /var/.trivy-cache
 
                     echo "Scanning ${FULL_IMAGE}"
 
