@@ -197,13 +197,13 @@ pipeline {
         stage('Trivy Image Scan') {
                 steps {
                     sh '''
-                    mkdir -p $WORKSPACE/.trivy-cache
+                    mkdir -p /var/.trivy-cache
 
                     echo "Scanning ${FULL_IMAGE}"
 
                     trivy image \
                     --scanners vuln \
-                    --cache-dir $WORKSPACE/.trivy-cache \
+                    --cache-dir /var/.trivy-cache \
                     --skip-java-db-update \
                     --format template \
                     --template "@/opt/trivy/html.tpl" \
@@ -212,7 +212,7 @@ pipeline {
                     
                     trivy image \
                     --scanners vuln \
-                    --cache-dir $WORKSPACE/.trivy-cache \
+                    --cache-dir /var/.trivy-cache \
                     --skip-java-db-update \
                     -f table \
                     -o trivy-image-scan-report.txt \
