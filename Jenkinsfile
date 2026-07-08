@@ -198,8 +198,8 @@ pipeline {
                 sh """
                 echo 'Running trivy scan on Docker image : ${env.FULL_IMAGE}'
                 mkdir -p $WORKSPACE/.trivy-cache 
-                trivy image --scanners vuln --skip-java-db-update --cache-dir $WORKSPACE/.trivy-cache --format template --template "@/opt/trivy/html.tpl" -o trivy-image-scan-report.html ${env.FULL_IMAGE}
-                trivy image --scanners vuln --skip-java-db-update --cache-dir $WORKSPACE/.trivy-cache --format table -o trivy-image-scan-report.txt ${env.FULL_IMAGE}
+                trivy image --skip-java-db-update --cache-dir $WORKSPACE/.trivy-cache --format template --template "@/opt/trivy/html.tpl" -o trivy-image-scan-report.html ${env.FULL_IMAGE}
+                trivy image --skip-java-db-update --cache-dir $WORKSPACE/.trivy-cache --format table -o trivy-image-scan-report.txt ${env.FULL_IMAGE}
                 """
             }
             post {
