@@ -193,29 +193,42 @@ pipeline {
                 }
             }
         }
-        stage('trivy scan image') { 
-            steps {
-                sh """
-                echo 'Running trivy scan on Docker image : ${env.FULL_IMAGE}'
-                trivy image --format template --template "@/opt/trivy/html.tpl" -o trivy-image-scan-report.html ${env.FULL_IMAGE}
-                trivy image --format table -o trivy-image-scan-report.txt ${env.FULL_IMAGE}
-                """
-            }
-            post {
-                success {
-                    echo 'Trivy Image Scan completed successfully'
-                    publishHTML(target: [
-                        reportName: 'Trivy Image Scan Report',
-                        reportDir: '.',
-                        reportFiles: 'trivy-image-scan-report.html',
-                        keepAll: true,
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        includeInEmail: true
-                    ])
+        stage('Trivy Image Scan') {
+                steps {
+                    sh '''
+                    mkdir -p $WORKSPACE/.trivy-cache
+
+                    echo "Scanning ${FULL_IMAGE}"
+
+                    trivy image \
+                    --cache-dir $WORKSPACE/.trivy-cache \
+                    --skip-java-db-update \
+                    --format template \
+                    --template "@/opt/trivy/html.tpl" \
+                    -o trivy-image-scan-report.html \
+                    ${FULL_IMAGE}
+
+                    trivy image \
+                    --cache-dir $WORKSPACE/.trivy-cache \
+                    --skip-java-db-update \
+                    -f table \
+                    -o trivy-image-scan-report.txt \
+                    ${FULL_IMAGE}
+                    '''
+                }
+
+                post {
+                    always {
+                        publishHTML(target: [
+                            reportName: 'Trivy Image Scan Report',
+                            reportDir: '.',
+                            reportFiles: 'trivy-image-scan-report.html',
+                            keepAll: true,
+                            alwaysLinkToLastBuild: true
+                        ])
+                    }
                 }
             }
-        }
         stage('Upload application image to ECR') {
             steps {
                 script {
