@@ -202,14 +202,16 @@ pipeline {
                     echo "Scanning ${FULL_IMAGE}"
 
                     trivy image \
+                    --scanners vuln \
                     --cache-dir $WORKSPACE/.trivy-cache \
                     --skip-java-db-update \
                     --format template \
                     --template "@/opt/trivy/html.tpl" \
                     -o trivy-image-scan-report.html \
                     ${FULL_IMAGE}
-
+                    
                     trivy image \
+                    --scanners vuln \
                     --cache-dir $WORKSPACE/.trivy-cache \
                     --skip-java-db-update \
                     -f table \
