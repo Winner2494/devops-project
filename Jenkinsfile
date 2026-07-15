@@ -239,7 +239,7 @@ pipeline {
             docker login \
             --username AWS \
             --password-stdin 957656047642.dkr.ecr.us-west-1.amazonaws.com
-            aws ecr describe-repositories \
+            aws ecr create-repositories \
             --repository-names wather-app \
             --region us-west-1
             '''
