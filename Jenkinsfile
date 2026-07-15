@@ -10,7 +10,7 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
         NEXUS_VERSION = 'nexus3'
         NEXUS_PROTOCOL = 'http'
-        NEXUS_URL = '54.177.248.90:8081' // Update with your actual Nexus IP
+        NEXUS_URL = '54.215.102.142:8081' // Update with your actual Nexus IP
         NEXUS_REPOSITORY = 'devops-repo'
         NEXUS_REPO_ID = 'devops-repo'
         NEXUS_CREDENTIALS_ID = 'nexus-cred'
@@ -189,7 +189,7 @@ pipeline {
                     /*def IMAGE_TAG = env.BUILD_NUMBER*/
                     
                     env.FULL_IMAGE = "${env.IMAGE_NAME}:${BUILD_NUMBER}"
-                    sh "docker rmi -f ${FULL_IMAGE} || true "
+                    /*sh "docker rmi -f ${FULL_IMAGE} || true "*/
                     sh "docker build -t ${FULL_IMAGE} ."
                 }
             }
@@ -232,22 +232,33 @@ pipeline {
                     }
                 }
             }*/
+        stage('Login to ECR') {
+            steps {
+            sh '''
+            aws ecr get-login-password --region eu-north-1 | \
+            docker login \
+            --username AWS \
+            --password-stdin 017135960377.dkr.ecr.eu-north-1.amazonaws.com
+            '''
+            }
+        }    
         stage('Upload application image to ECR') {
             steps {
-                script {
+                /*script {
                     docker.withRegistry(registry, registrycredential) {
                         dockerImage.push("${env.FULL_IMAGE}")
-                        /*sh "docker push ${env.FULL_IMAGE}"*/
-                    }
-                }
+                        /*sh "docker push ${env.FULL_IMAGE}"
+                    }*/
             }
         }
         stage('Deploy to Container') {
             steps {
                 echo 'Deploying application to container...'
                 script {
-                    sh "docker rm -f devops-repo || true"
-                    sh "docker run -d --name devops-repo -p 8080:8080 ${env.IMAGE_TAG}"
+                    //sh "docker rm -f devops-repo || true"
+                    //sh "docker run -d --name devops-repo -p 8080:8080 ${env.IMAGE_TAG}"
+                    sh "docker compose down || true"
+                    sh "docker compose up -d"
                 }
             }
         }
