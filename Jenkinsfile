@@ -244,6 +244,7 @@ pipeline {
         }    
         stage('Upload application image to ECR') {
             steps {
+                sh "docker push ${env.FULL_IMAGE}"
                 /*script {
                     docker.withRegistry(registry, registrycredential) {
                         dockerImage.push("${env.FULL_IMAGE}")
