@@ -248,9 +248,10 @@ pipeline {
                     docker.withRegistry(registry, registrycredential) {
                         dockerImage.push("${env.FULL_IMAGE}")
                         /*sh "docker push ${env.FULL_IMAGE}"
-                    }*/
+                }*/
             }
         }
+    }
         stage('Deploy to Container') {
             steps {
                 echo 'Deploying application to container...'
