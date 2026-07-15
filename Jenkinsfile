@@ -316,11 +316,11 @@ pipeline {
                 def buildUrl = env.BUILD_URL
 
                 // Slack Notification
-                slackSend (
+                /*slackSend (
                     channel: '#devops-cicd',
                     color: buildStatus == 'SUCCESS' ? 'good' : 'danger',
                     message: "${buildStatus}: Job ${env.JOB_NAME} BUILD #${env.BUILD_NUMBER}\nStarted by: ${buildUser}\nBuild URL: ${buildUrl}"
-                )
+                )*/
 
                 // Email Notification placed inside script block to easily read scope variables safely
                 emailext (
