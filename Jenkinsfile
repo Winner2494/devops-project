@@ -54,7 +54,7 @@ pipeline {
                 }
                 failure {
                     echo 'Unit Tests Failed'
-                    junit '**/target/surefire-reports/*.xml'
+                    junit '**/target/*.xml'
                 }
             }
         }
@@ -81,7 +81,7 @@ pipeline {
                     echo 'Checkstyle analysis completed successfully'
                     publishHTML(target: [
                         reportName: 'Checkstyle Report',
-                        reportDir: 'target/site',
+                        reportDir: 'target/reports',
                         reportFiles: 'checkstyle.html',
                         keepAll: true,
                         allowMissing: false,
@@ -101,7 +101,7 @@ pipeline {
                         -Dsonar.java.binaries=target/classes \
                         -Dsonar.junit.reportPaths=target/surefire-reports \
                         -Dsonar.jacoco.reportPaths=target/jacoco.exec \
-                        -Dsonar.java.checkstyle.reportPaths=target/site/checkstyle.xml \
+                        -Dsonar.java.checkstyle.reportPaths=target/reports/checkstyle.xml \
                         -Dsonar.exclusions=target/**,.git/** \
                     """    
                 }
@@ -336,10 +336,10 @@ pipeline {
                         <p>Started by: <b>${buildUser}</b></p>
                         <p>Build URL: <a href="${buildUrl}">${buildUrl}</a></p>
                     """,
-                    to: 'devops24021994@gmail.com',
-                    from: 'devops24021994@gmail.com',
+                    to: 'ajinkyahatolkar24@gmail.com',
+                    from: 'ajinkyahatolkar24@gmail.com',
                     mimeType: 'text/html',
-                    attachmentsPattern: 'zap_report.html,trivy-file-scan-report.html,trivy-image-scan-report.html,target/site/checkstyle.html,target/checkstyle.html'
+                    attachmentsPattern: 'zap_report.html,trivy-file-scan-report.html,trivy-image-scan-report.html,target/reports/checkstyle.html,target/checkstyle.html'
                 )
             } catch (Exception e) {
                 echo "Email notification failed: ${e.getMessage()}"
