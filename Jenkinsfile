@@ -159,21 +159,17 @@ pipeline {
                 )
             }
         }*/
-        stage('trivy scan image') { 
+        stage('trivy file scan') {
             steps {
-                sh """
-                echo 'Running trivy scan on Docker image : ${env.FULL_IMAGE}'
-                trivy image --format template --template "@/opt/trivy/html.tpl" -o trivy-image-scan-report.html ${env.FULL_IMAGE}
-                trivy image --format table -o trivy-image-scan-report.txt ${env.FULL_IMAGE}
-                """
+                sh 'trivy fs --format template --template "@/opt/trivy/html.tpl" -o trivy-file-scan-report.html .'
             }
             post {
                 success {
-                    echo 'Trivy Image Scan completed successfully'
+                    echo 'Trivy File Scan completed successfully'
                     publishHTML(target: [
-                        reportName: 'Trivy Image Scan Report',
+                        reportName: 'Trivy File Scan Report',
                         reportDir: '.',
-                        reportFiles: 'trivy-image-scan-report.html',
+                        reportFiles: 'trivy-file-scan-report.html',
                         keepAll: true,
                         allowMissing: false,
                         alwaysLinkToLastBuild: true,
@@ -198,44 +194,29 @@ pipeline {
                 }
             }
         }
-        /*stage('Trivy Image Scan') {
-                steps {
-                    sh '''
-                    mkdir -p /tmp/.trivy-cache
-
-                    echo "Scanning ${FULL_IMAGE}"
-
-                    trivy image \
-                    --scanners vuln \
-                    --cache-dir /tmp/.trivy-cache \
-                    --skip-java-db-update \
-                    --format template \
-                    --template "@/opt/trivy/html.tpl" \
-                    -o trivy-image-scan-report.html \
-                    ${FULL_IMAGE}
-                    
-                    trivy image \
-                    --scanners vuln \
-                    --cache-dir /tmp/.trivy-cache \
-                    --skip-java-db-update \
-                    -f table \
-                    -o trivy-image-scan-report.txt \
-                    ${FULL_IMAGE}
-                    '''
+        stage('trivy scan image') { 
+            steps {
+                sh """
+                echo 'Running trivy scan on Docker image : ${env.FULL_IMAGE}'
+                trivy image --format template --template "@/opt/trivy/html.tpl" -o trivy-image-scan-report.html ${env.FULL_IMAGE}
+                trivy image --format table -o trivy-image-scan-report.txt ${env.FULL_IMAGE}
+                """
+            }
+            post {
+                success {
+                    echo 'Trivy Image Scan completed successfully'
+                    publishHTML(target: [
+                        reportName: 'Trivy Image Scan Report',
+                        reportDir: '.',
+                        reportFiles: 'trivy-image-scan-report.html',
+                        keepAll: true,
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        includeInEmail: true
+                    ])
                 }
-
-                post {
-                    always {
-                        publishHTML(target: [
-                            reportName: 'Trivy Image Scan Report',
-                            reportDir: '.',
-                            reportFiles: 'trivy-image-scan-report.html',
-                            keepAll: true,
-                            alwaysLinkToLastBuild: true
-                        ])
-                    }
-                }
-            }*/
+            }
+        }
         stage('Login to ECR') {
             steps {
             sh '''
