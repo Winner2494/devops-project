@@ -99,7 +99,7 @@ pipeline {
                         -Dsonar.sources=src/main/java \
                         -Dsonar.tests=src/test/java \
                         -Dsonar.java.binaries=target/classes \
-                        -Dsonar.junit.reportPaths=target/surefire-reports \
+                        -Dsonar.junit.reportPaths=target/reports \
                         -Dsonar.jacoco.reportPaths=target/jacoco.exec \
                         -Dsonar.java.checkstyle.reportPaths=target/reports/checkstyle.xml \
                         -Dsonar.exclusions=target/**,.git/** \
@@ -148,10 +148,12 @@ pipeline {
         }
         stage('OWASP Dependency Check Scan') {
             steps {
-            dependencyCheck(
-                odcInstallation: 'dp-check',
-                additionalArguments: '--scan . --format ALL'
-            )
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                dependencyCheck(
+                  odcInstallation: 'dp-check',
+                  additionalArguments: '--scan . --format ALL --nvdApiKey ${NVD_API_KEY}'
+                  )
+                }
             }
             post {
                 always {
