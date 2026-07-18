@@ -146,19 +146,21 @@ pipeline {
                 }
             }
         }
-        /*stage("OWASP Dependency Check Scan") {
+        stage('OWASP Dependency Check Scan') {
             steps {
-                dependencyCheck(
-                     odcInstallation: 'dp-check',
-                     additionalArguments: '''
-                        --scan .
-                        --noupdate
-                        --disableYarnAudit
-                        --disableNodeAudit
-                     ''',
-                )
+            dependencyCheck(
+                odcInstallation: 'dp-check',
+                additionalArguments: '--scan . --format ALL'
+            )
             }
-        }*/
+            post {
+                always {
+                   dependencyCheckPublisher(
+                   pattern: '**/dependency-check-report.html'
+                   )
+                }
+            }
+        }
         stage('trivy file scan') {
             steps {
                 sh 'trivy fs --format template --template "@/opt/trivy/html.tpl" -o trivy-file-scan-report.html .'
@@ -324,7 +326,7 @@ pipeline {
                     to: 'ajinkyahatolkar24@gmail.com',
                     from: 'ajinkyahatolkar24@gmail.com',
                     mimeType: 'text/html',
-                    attachmentsPattern: 'zap_report.html,trivy-file-scan-report.html,trivy-image-scan-report.html,target/reports/checkstyle.html,target/checkstyle.html'
+                    attachmentsPattern: 'zap_report.html,trivy-file-scan-report.html,trivy-image-scan-report.html,target/reports/checkstyle.html,target/checkstyle.html,dependency-check-report.html'
                 )
             } catch (Exception e) {
                 echo "Email notification failed: ${e.getMessage()}"
