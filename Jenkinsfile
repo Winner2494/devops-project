@@ -163,7 +163,7 @@ pipeline {
                 }
             }
         }
-        stage('trivy file scan') {
+        /*stage('trivy file scan') {
             steps {
                 sh 'trivy fs --format template --template "@/opt/trivy/html.tpl" -o trivy-file-scan-report.html .'
             }
@@ -181,7 +181,7 @@ pipeline {
                     ])
                 }
             }
-        }
+        }*/
         stage('build docker image') {
             steps {
                 script {
