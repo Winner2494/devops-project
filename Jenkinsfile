@@ -15,6 +15,7 @@ pipeline {
         NEXUS_REPO_ID = 'devops-repo'
         NEXUS_CREDENTIALS_ID = 'nexus-cred'
         ARTVERSION = "${env.BUILD_ID}"
+        TEMPDIR= '/var/lib/jenkins/trivy-temp'
 
         registrycredential = 'ecr:us-west-1:awscreds'
         registry = 'https://957656047642.dkr.ecr.us-west-1.amazonaws.com'
@@ -166,7 +167,7 @@ pipeline {
         stage('trivy file scan') {
             steps {
                 sh 'trivy fs --format template --template "@/opt/trivy/html.tpl" -o trivy-file-scan-report.html .'
-            }//
+            }
             post {
                 success {
                     echo 'Trivy File Scan completed successfully'
@@ -205,7 +206,7 @@ pipeline {
                 trivy image --format template --template "@/opt/trivy/html.tpl" -o trivy-image-scan-report.html ${env.FULL_IMAGE}
                 trivy image --format table -o trivy-image-scan-report.txt ${env.FULL_IMAGE}
                 """
-            }
+            }//
             post {
                 success {
                     echo 'Trivy Image Scan completed successfully'
