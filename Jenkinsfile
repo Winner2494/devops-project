@@ -157,7 +157,7 @@ pipeline {
             }
             post {
                 always {
-                   dependencyCheckPubxlisher(
+                   dependencyCheckPublisher(
                    pattern: '**/dependency-check-report.html'
                    )
                 }
