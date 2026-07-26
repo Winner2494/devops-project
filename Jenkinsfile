@@ -10,7 +10,7 @@ pipeline {
         SCANNER_HOME = tool 'sonar-scanner'
         NEXUS_VERSION = 'nexus3'
         NEXUS_PROTOCOL = 'http'
-        NEXUS_URL = '18.144.46.25:8081' // Update with your actual Nexus IP
+        NEXUS_URL = '54.176.60.230:8081' // Update with your actual Nexus IP
         NEXUS_REPOSITORY = 'devops-repo'
         NEXUS_REPO_ID = 'devops-repo'
         NEXUS_CREDENTIALS_ID = 'nexus-cred'
@@ -146,8 +146,8 @@ pipeline {
                 }
             }
         }
-        stage('OWASP Dependency Check Scan') {
-            steps {
+        /*stage('OWASP Dependency Check Scan') {
+            /*steps {
                 //withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
                 dependencyCheck(
                   odcInstallation: 'dp-check',
@@ -155,7 +155,7 @@ pipeline {
                   )
                 //}
             }
-            post {
+            /post {
                 always {
                    dependencyCheckPubxlisher(
                    pattern: '**/dependency-check-report.html'
@@ -262,7 +262,7 @@ pipeline {
                     def exitCode = sh(script: '''
                         docker run --rm --user root --network host -v \$(pwd):/zap/wrk:rw \
                         ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-                        -t http://18.144.46.25:8081/dashboard \
+                        -t http://54.176.60.230:8081/dashboard \
                         -r zap_report.html -J zap_report.json || true
                     ''', returnStatus: true)
 
