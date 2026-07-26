@@ -146,16 +146,16 @@ pipeline {
                 }
             }
         }
-        /*stage('OWASP Dependency Check Scan') {
-            /*steps {
-                //withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+        stage('OWASP Dependency Check Scan') {
+            steps {
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
                 dependencyCheck(
                   odcInstallation: 'dp-check',
                   additionalArguments: '--scan . --format ALL --nvdApiDelay 5000'
                   )
-                //}
+                }
             }
-            /post {
+            post {
                 always {
                    dependencyCheckPubxlisher(
                    pattern: '**/dependency-check-report.html'
