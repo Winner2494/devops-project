@@ -166,7 +166,7 @@ pipeline {
         stage('trivy file scan') {
             steps {
                 sh 'trivy fs --format template --template "@/opt/trivy/html.tpl" -o trivy-file-scan-report.html .'
-            }
+            }//
             post {
                 success {
                     echo 'Trivy File Scan completed successfully'
